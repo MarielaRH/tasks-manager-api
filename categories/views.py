@@ -1,25 +1,30 @@
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
+from rest_framework.response import Response
 from rest_framework import permissions
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
 from categories.models import Category
 from .serializers import *
 from tasks.serializers import *
-from rest_framework.response import Response
 # Create your views here.
 
 
 @api_view(['GET', 'POST'])
 @permission_classes([permissions.IsAuthenticated])
 def categories(request):
+    paginator = PageNumberPagination()
+    page = None
     response = None
     if request.method == 'GET':
         categories = Category.objects.all()
-        categories_serialized = CategoriesSerializers(categories, many=True)
+        page = paginator.paginate_queryset(categories, request)
+        categories_serialized = CategoriesSerializers(page, many=True)
         response = {
             "status_code": status.HTTP_200_OK,
             "message":"OK",
             "data": categories_serialized.data
         }
+        return paginator.get_paginated_response(response)
     elif request.method == 'POST':
         try:
             Category.objects.get(name=request.data['name'])
@@ -48,7 +53,7 @@ def categories(request):
                     "message": "Bad request",
                     "error": category_serialized.errors
                 }
-    return Response(response)
+        return Response(response)
 
 
 
@@ -115,6 +120,7 @@ def manage_category(request, category_id):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def category_tasks(request, category_id):
+    paginator = PageNumberPagination()
     response = None
 
     try:
@@ -128,10 +134,11 @@ def category_tasks(request, category_id):
 
     if request.method == 'GET':
         tasks_category = category.tasks.all()
-        tasks_category_serialized = TasksSerializer(tasks_category, many=True)
+        page = paginator.paginate_queryset(tasks_category, request)
+        tasks_category_serialized = TasksSerializer(page, many=True)
         response = {
             "status_code": status.HTTP_200_OK,
             "message":"OK",
             "data": tasks_category_serialized.data
         }
-    return Response(response)
+    return paginator.get_paginated_response(response)

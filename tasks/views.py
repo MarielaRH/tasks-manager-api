@@ -1,15 +1,17 @@
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework import status
-from rest_framework import permissions
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from .models import Task
+from rest_framework import permissions
+from rest_framework import status
 from projects.models import Project
+from .models import Task
 from .serializers import *
 # Create your views here.
+
 @api_view(['GET', 'POST'])
 @permission_classes([permissions.IsAuthenticated])
 def tasks(request,project_id):
-
+    paginator = PageNumberPagination()
     response = None
     try:
         Project.objects.get(id=project_id)
@@ -23,12 +25,14 @@ def tasks(request,project_id):
 
     if request.method == 'GET':
         tasks = Task.objects.filter(project_id=project_id)
-        tasks_serialized = TasksSerializer(tasks, many=True)
+        page = paginator.paginate_queryset(tasks, request)
+        tasks_serialized = TasksSerializer(page, many=True)
         response = {
             "status_code": status.HTTP_200_OK,
             "message":"OK",
             "data": tasks_serialized.data
         }
+        return paginator.get_paginated_response(response)
     elif request.method == 'POST':
         task_serialized = CreateTasksSerializer(data=request.data)
         if task_serialized.is_valid():
@@ -54,7 +58,7 @@ def tasks(request,project_id):
                 "error": task_serialized.errors
             }
 
-    return Response(response)
+        return Response(response)
 
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([permissions.IsAuthenticated])

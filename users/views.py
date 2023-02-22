@@ -2,14 +2,14 @@
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.pagination import PageNumberPagination
 from rest_framework import permissions
 from rest_framework import status
-from .serializers import *
-from projects.serializers import *
 from .models import User
+from projects.serializers import *
+from .serializers import *
 
 # Create your views here.
-# CUD
 
 @api_view(['GET','POST'])
 @permission_classes([permissions.AllowAny])
@@ -83,10 +83,12 @@ def user_login(request):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def users(request):
+    paginator = PageNumberPagination()
     if request.method == 'GET':
         users = User.objects.all()
-        users_serialized = GetUserSerializer(users, many=True)
-        return Response({
+        page = paginator.paginate_queryset(users, request)
+        users_serialized = GetUserSerializer(page, many=True)
+        return paginator.get_paginated_response({
                 "statusCode": status.HTTP_200_OK,
                 "message": 'OK',
                 "data": users_serialized.data
@@ -149,7 +151,7 @@ def manage_users(request, user_id):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def user_projects(request, user_id):
-    response = None
+    paginator = PageNumberPagination()
     try:
         user = User.objects.get(id=user_id)
     except:
@@ -161,8 +163,9 @@ def user_projects(request, user_id):
 
     if request.method == 'GET':
         user_projects = user.projects.all()
-        user_projects_serialized = ProjectsSerializer(user_projects, many=True)
-        return Response({
+        page = paginator.paginate_queryset(user_projects, request)
+        user_projects_serialized = ProjectsSerializer(page, many=True)
+        return paginator.get_paginated_response({
             "status_code": status.HTTP_200_OK,
             "message": "OK",
             "projects": user_projects_serialized.data,

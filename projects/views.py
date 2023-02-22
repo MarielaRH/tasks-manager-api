@@ -1,4 +1,5 @@
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework import permissions
 from rest_framework import status
@@ -11,15 +12,18 @@ from .serializers import *
 @api_view(['GET','POST'])
 @permission_classes([permissions.IsAuthenticated])
 def projects(request):
+    paginator = PageNumberPagination()
     response = None
     if request.method == 'GET':
         projects = Project.objects.all()
-        projects_serialized = ProjectsSerializer(projects, many=True)
+        page = paginator.paginate_queryset(projects, request)
+        projects_serialized = ProjectsSerializer(page, many=True)
         response = {
             "status_code": status.HTTP_200_OK,
             "message":"OK",
             "data": projects_serialized.data
         }
+        return paginator.get_paginated_response(response)
     elif request.method == 'POST':
         project = ProjectsSerializer(data=request.data)
         if project.is_valid():
@@ -41,7 +45,7 @@ def projects(request):
                 "message":"Bad request",
                 "error": project.errors
             }
-    return Response(response)
+        return Response(response)
 
 
 @api_view(['GET','PUT', 'DELETE'])
@@ -158,7 +162,9 @@ def manage_users_project(request, project_id, user_id):
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
 def participants_by_projects(request, project_id):
+    paginator = PageNumberPagination()
     response = None
+    page = None
 
     try:
         project = Project.objects.get(id=project_id)
@@ -171,11 +177,12 @@ def participants_by_projects(request, project_id):
 
     if request.method == 'GET':
         project_participants = project.participants.all()
-        project_participants_serialized = GetUserSerializer(project_participants, many=True)
+        page = paginator.paginate_queryset(project_participants, request)
+        project_participants_serialized = GetUserSerializer(page, many=True)
         response = {
             "status_code": status.HTTP_200_OK,
             "message":"OK",
             "data": project_participants_serialized.data
         }
 
-    return Response(response)
+    return paginator.get_paginated_response(response)
