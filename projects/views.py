@@ -23,7 +23,7 @@ def projects(request):
             "message":"OK",
             "data": projects_serialized.data
         }
-        return paginator.get_paginated_response(response)
+        return paginator.get_paginated_response(response, status=status.response.status_code)
     elif request.method == 'POST':
         project = ProjectsSerializer(data=request.data)
         if project.is_valid():
@@ -45,7 +45,7 @@ def projects(request):
                 "message":"Bad request",
                 "error": project.errors
             }
-        return Response(response)
+        return Response(response, status=response.status_code)
 
 
 @api_view(['GET','PUT', 'DELETE'])
@@ -60,7 +60,7 @@ def manage_projects(request, project_id):
             "status_code": status.HTTP_404_NOT_FOUND,
             "message": "Not found",
             "error": "project you’re trying to access doesn’t exist",
-        })
+        }, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         project_serialized = ProjectsSerializer(project)
@@ -98,7 +98,7 @@ def manage_projects(request, project_id):
         project.participants.clear()
         project.delete()
 
-    return Response(response)
+    return Response(response, status=response.status_code)
 
 
 @api_view(['POST','DELETE'])
@@ -119,10 +119,9 @@ def manage_users_project(request, project_id, user_id):
         }
         if not project:
             response["error"]="project you’re trying to access doesn’t exist"
-            return Response(response)
         elif not user:
             response["error"]="user you’re trying to access doesn’t exist"
-            return Response(response)
+        return Response(response, status=response.status_code)
 
     if request.method == 'POST':
 
@@ -157,7 +156,7 @@ def manage_users_project(request, project_id, user_id):
             }
 
 
-    return Response(response)
+    return Response(response, status=response.status_code)
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAuthenticated])
@@ -173,7 +172,7 @@ def participants_by_projects(request, project_id):
             "status_code": status.HTTP_404_NOT_FOUND,
             "message": "Not found",
             "error": "project you’re trying to access doesn’t exist",
-        })
+        }, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         project_participants = project.participants.all()
@@ -185,4 +184,4 @@ def participants_by_projects(request, project_id):
             "data": project_participants_serialized.data
         }
 
-    return paginator.get_paginated_response(response)
+    return paginator.get_paginated_response(response, status=response.status_code)

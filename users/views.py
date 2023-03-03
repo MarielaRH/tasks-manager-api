@@ -15,6 +15,8 @@ from .serializers import *
 @permission_classes([permissions.AllowAny])
 def user_signup(request):
 
+    response = None
+
     if request.method == 'POST':
         data = UserSerializer(data=request.data)
         if data.is_valid():
@@ -25,17 +27,20 @@ def user_signup(request):
                 last_name=request.data['last_name']
             )
             created_user = GetUserSerializer(user)
-            return Response({
-                "statusCode": status.HTTP_201_CREATED,
-                "message": 'User has been successfully created',
+
+            response = {
+                "status_code": status.HTTP_201_CREATED,
+                "message": "User has been successfully created",
                 "data": created_user.data
-            })
+            }
         else:
-             return Response({
-                "statusCode": status.HTTP_400_BAD_REQUEST,
-                "message": 'Bad Request',
-                "error": data.errors,
-            })
+            response = {
+                "status_code": status.HTTP_400_BAD_REQUEST,
+                "message": 'Bad request',
+                "error":  data.errors
+            }
+
+        return Response(response, status=response['status_code'])
 
 
 @api_view(['POST'])
@@ -43,7 +48,6 @@ def user_signup(request):
 def user_login(request):
  if request.method == 'POST':
     serializer = LoginUserSerializer(data=request.data)
-    print(serializer.is_valid())
     if serializer.is_valid():
         user = authenticate(
             username=request.data['email'],
@@ -54,30 +58,30 @@ def user_login(request):
             error_message = None
             if len(user_exist) == 0:
                 error_message = {
-                    "statusCode": status.HTTP_404_NOT_FOUND,
+                    "status_code": status.HTTP_404_NOT_FOUND,
                     "message": 'Not found',
                     "error": '{} is not register'.format(request.data['email'])
                 }
             else:
                 error_message = {
-                    "statusCode": status.HTTP_400_BAD_REQUEST,
+                    "status_code": status.HTTP_400_BAD_REQUEST,
                     "message": 'Bad request',
                     "error": 'password is wrong'
                 }
-            return Response(error_message)
+            return Response(error_message, status=error_message.status_code)
         else:
             user_serialized = GetUserSerializer(user)
             token = Token.objects.get(user=user)
             return Response({
                 'token': token.key,
                 'user': user_serialized.data
-            })
+            }, status=status.HTTP_200_OK)
     else:
         return Response({
-            "statusCode": status.HTTP_400_BAD_REQUEST,
+            "status_code": status.HTTP_400_BAD_REQUEST,
             "message": 'Bad request',
             "error": serializer.errors
-        })
+        }, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
@@ -89,10 +93,11 @@ def users(request):
         page = paginator.paginate_queryset(users, request)
         users_serialized = GetUserSerializer(page, many=True)
         return paginator.get_paginated_response({
-                "statusCode": status.HTTP_200_OK,
+                "status_code": status.HTTP_200_OK,
                 "message": 'OK',
                 "data": users_serialized.data
-            })
+            }, status=status.HTTP_200_OK)
+
 
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([permissions.IsAuthenticated])
@@ -107,12 +112,12 @@ def manage_users(request, user_id):
             "status_code": status.HTTP_404_NOT_FOUND,
             "message": "Not found",
             "error": "task you’re trying to access doesn’t exist",
-        })
+        }, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         user_serialized = GetUserSerializer(user)
         response = {
-            "statusCode": status.HTTP_200_OK,
+            "status_code": status.HTTP_200_OK,
             "message": 'OK',
             "data": user_serialized.data
         }
@@ -126,7 +131,7 @@ def manage_users(request, user_id):
             user_serialized = GetUserSerializer(user)
 
             response = {
-                "statusCode": status.HTTP_200_OK,
+                "status_code": status.HTTP_200_OK,
                 "message": 'user has been successfully updated',
                 "data": user_serialized.data
             }
@@ -144,7 +149,7 @@ def manage_users(request, user_id):
         }
         user.delete()
 
-    return Response(response)
+    return Response(response, status=response.status_code)
 
 
 
@@ -159,7 +164,7 @@ def user_projects(request, user_id):
             "status_code": status.HTTP_404_NOT_FOUND,
             "message": "Not found",
             "error": "user you’re trying to access doesn’t exist",
-        })
+        }, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         user_projects = user.projects.all()
@@ -169,5 +174,5 @@ def user_projects(request, user_id):
             "status_code": status.HTTP_200_OK,
             "message": "OK",
             "projects": user_projects_serialized.data,
-        })
+        }, status=status.HTTP_200_OK)
 

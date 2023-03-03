@@ -61,6 +61,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_WHITELIST = (
+  'http://localhost:4200',
+  'http://127.0.0.1:4200',
+)
+
+
 ROOT_URLCONF = 'tasks_manager.urls'
 
 REST_FRAMEWORK = {
@@ -72,7 +79,7 @@ REST_FRAMEWORK = {
        'rest_framework.authentication.TokenAuthentication',
    ],
    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-   'PAGE_SIZE': 2
+   'PAGE_SIZE': 20
 }
 
 TEMPLATES = [

@@ -20,7 +20,7 @@ def tasks(request,project_id):
             "status_code": status.HTTP_404_NOT_FOUND,
             "message":"Not found",
             "error": "project you’re trying to access doesn’t exist"
-        })
+        }, status=status.HTTP_404_NOT_FOUND)
 
 
     if request.method == 'GET':
@@ -58,7 +58,7 @@ def tasks(request,project_id):
                 "error": task_serialized.errors
             }
 
-        return Response(response)
+        return Response(response, status=response.status_code)
 
 @api_view(['GET', 'PUT', 'DELETE'])
 @permission_classes([permissions.IsAuthenticated])
@@ -78,10 +78,10 @@ def manage_tasks(request, project_id, task_id):
         }
         if not project:
             response["error"]="project you’re trying to access doesn’t exist"
-            return Response(response)
+            return Response(response, status=response.status_code)
         elif not task:
             response["error"]="task you’re trying to access doesn’t exist"
-            return Response(response)
+            return Response(response, status=response.status_code)
 
 
     if request.method == 'GET':
@@ -125,4 +125,4 @@ def manage_tasks(request, project_id, task_id):
         }
         task.delete()
 
-    return Response(response)
+    return Response(response, status=status.response.status_code)

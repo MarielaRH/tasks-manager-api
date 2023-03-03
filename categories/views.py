@@ -24,7 +24,7 @@ def categories(request):
             "message":"OK",
             "data": categories_serialized.data
         }
-        return paginator.get_paginated_response(response)
+        return paginator.get_paginated_response(response, status=response.status_code)
     elif request.method == 'POST':
         try:
             Category.objects.get(name=request.data['name'])
@@ -53,7 +53,7 @@ def categories(request):
                     "message": "Bad request",
                     "error": category_serialized.errors
                 }
-        return Response(response)
+        return Response(response,status=response.status_code)
 
 
 
@@ -69,7 +69,7 @@ def manage_category(request, category_id):
             "status_code": status.HTTP_404_NOT_FOUND,
             "message": "Not found",
             "error": "category you’re trying to access doesn’t exist",
-        })
+        },status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         category_serialized = CategoriesSerializers(category)
@@ -114,7 +114,7 @@ def manage_category(request, category_id):
         }
         category.delete()
 
-    return Response(response)
+    return Response(response,status=response.status_code)
 
 
 @api_view(['GET'])
@@ -130,7 +130,7 @@ def category_tasks(request, category_id):
             "status_code": status.HTTP_404_NOT_FOUND,
             "message": "Not found",
             "error": "category you’re trying to access doesn’t exist",
-        })
+        },status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         tasks_category = category.tasks.all()
@@ -141,4 +141,4 @@ def category_tasks(request, category_id):
             "message":"OK",
             "data": tasks_category_serialized.data
         }
-    return paginator.get_paginated_response(response)
+    return paginator.get_paginated_response(response,status=response.status_code)

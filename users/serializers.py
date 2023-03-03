@@ -2,8 +2,6 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from .models import User
 
-
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -22,9 +20,6 @@ class GetUserSerializer(serializers.Serializer):
     last_name = serializers.CharField()
     email = serializers.EmailField()
     created_at = serializers.DateTimeField()
-    # class Meta:
-    #     model = User
-    #     fields = ['id', 'first_name', 'last_name', 'email', 'created_at']
 
 class UpdateUserSerializer(serializers.ModelSerializer):
      class Meta:
